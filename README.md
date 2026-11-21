@@ -5,13 +5,15 @@
 Paste an SMS, WhatsApp message or link. ScamShield tells you whether it looks like a scam, **shows exactly which phrases triggered it and why**, and, if you already clicked or paid, tells you what to do next. Everything runs in your browser. Nothing is uploaded.
 
 ## Live site
-**https://scamshield-in.higgsfield.app** (the hosted web app, source in `web/`).
+**https://roushananish-tech.github.io/scamshield/** (GitHub Pages, serves the root app straight from this repository).
 
 Two builds share one rule engine (`src/engine/*.js`, unchanged between them):
 - **Root app** (`index.html`, `src/app.js`): the original zero-dependency, single-page checker. Run it with `npm start`.
-- **Hosted web app** (`web/`): TanStack Start (React 19) site with a home page, live demo, "I am on a call", lost-money steps, message and chat checker, spot-the-scam quiz and four family rules. Same engine, same privacy rule: nothing typed is sent anywhere.
+- **Higgsfield preview** (`web/`, UI source only; the preview URL is private to the owner, so it is not a public link): TanStack Start (React 19) site with a home page, live demo, "I am on a call", lost-money steps, message and chat checker, spot-the-scam quiz and four family rules. Same engine, same privacy rule: nothing typed is sent anywhere.
 
-Hosted site security headers: `default-src 'none'`, per-request nonce for scripts and styles, `connect-src 'none'`, `form-action 'none'`, `base-uri 'none'`, no `unsafe-inline`. The `style-src` also holds one fixed hash for a style block the Higgsfield editor injects while the owner edits the site; it is not used by visitors.
+Reproducibility, stated plainly: the root app is the standalone, fully runnable and tested deliverable (`npm start`, `npm test`, `npm run eval`). The hosted site was generated on the Higgsfield platform, so `web/` holds only our UI source (routes, components, styles, images) and `web/sync-into-app.sh`, which copies the engine, tests and UI into a TanStack Start scaffold. The scaffold itself (build config and platform packages) is not in this repository, so `web/` does not build on its own. Treat it as a design preview, not a deliverable you can run.
+
+Higgsfield preview security headers: `default-src 'none'`, per-request nonce for scripts and styles, `connect-src 'none'`, `form-action 'none'`, `base-uri 'none'`, no `unsafe-inline`. The `style-src` also holds one fixed hash for a style block the Higgsfield editor injects while the owner edits the site; it is not used by visitors.
 
 ## Why this is different
 | Feature | What it does |
