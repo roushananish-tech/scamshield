@@ -727,3 +727,28 @@ body { background: linear-gradient(180deg, #f6f8fd 0, #ffffff 360px) no-repeat, 
 .wrap.main textarea { border: 2px dashed var(--brand-3); border-radius: 20px; background: var(--bg-soft); padding: 18px; min-height: 180px; transition: border-color 0.2s ease, background 0.2s ease; }
 .wrap.main textarea:focus { border-style: solid; background: #ffffff; }
 @media (min-width: 768px) { .wrap.main > h1 { font-size: 42px; } }
+
+/* Premium backgrounds and layout fixes (v6) */
+html, body { overflow-x: clip; }
+.site-footer { margin-top: 0; border-radius: 0; }
+.wrap.main { padding-bottom: 72px; }
+.wrap.main::before {
+  height: 360px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 55%, #ffffff 100%), linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 60%), url("/img/bg-light-1600.webp") center top / cover no-repeat;
+  -webkit-mask-image: none; mask-image: none;
+}
+.wrap.main > h1 { padding-top: 28px; }
+.wrap.main > form, .wrap.main > .panel {
+  background: #ffffff; border: 1px solid var(--hairline); border-radius: 24px; box-shadow: var(--shadow-md); padding: 24px; margin-top: 24px;
+}
+@media (min-width: 768px) { .wrap.main > form, .wrap.main > .panel { padding: 32px; } }
+.wrap.main .radio-row { gap: 10px; }
+.wrap.main .radio-chip { display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 12px 18px; background: #ffffff; border: 2px solid var(--card-line); border-radius: 16px; line-height: 1.25; font-weight: 700; }
+.wrap.main .radio-chip input { flex: none; align-self: center; margin: 0; }
+.wrap.main .radio-chip:has(input:checked) { border-color: var(--brand-2); background: var(--bg-soft); box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.15); }
+.wrap.main .check-row { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+
+.hero2 { background: linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0.78) 45%, rgba(255, 255, 255, 0.25) 100%), url("/img/bg-light-1600.webp") center / cover no-repeat; }
+.section--tint { background: linear-gradient(180deg, rgba(245, 247, 252, 0.94), rgba(245, 247, 252, 0.94)), url("/img/bg-light-1600.webp") center / cover no-repeat; }
+.band-dark { background: linear-gradient(rgba(8, 20, 48, 0.55), rgba(8, 20, 48, 0.82)), url("/img/bg-dark-1600.webp") center / cover no-repeat; }
+.site-footer { background: linear-gradient(rgba(8, 20, 48, 0.78), rgba(8, 20, 48, 0.92)), url("/img/bg-dark-1600.webp") center / cover no-repeat; }
