@@ -5,6 +5,9 @@ import { Icon, type IconName } from "../ui/icons";
 import { NewTab } from "../ui/parts";
 import { LiveDemo } from "../ui/demo";
 import { RedFlags } from "../ui/redflags";
+import { ScamAccordion, type AccItem } from "../ui/accordion";
+import { FeaturePanel, type Feature } from "../ui/featurepanel";
+import { STAGES, STAGE_INFO } from "../engine/conversation.js";
 import { COMM_PORTAL, PORTAL } from "../engine/lostMoney.js";
 import { portalHref } from "../lib/links";
 import { FOUR_RULES, PANIC_KINDS } from "../engine/panic.js";
@@ -15,11 +18,11 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const TRICKS: { kind: string; icon: IconName; title: string; sub: string }[] = [
-  { kind: "digital_arrest", icon: "alert-triangle", title: "Digital arrest", sub: "Fake police, CBI or customs, often on a video call, demanding money." },
-  { kind: "bank_caller", icon: "bank", title: "Fake bank or card call", sub: "A support agent who needs your OTP, PIN or card number." },
-  { kind: "voice_clone", icon: "person", title: "Cloned voice", sub: "A familiar voice in sudden trouble, asking for money fast." },
-  { kind: "remote_help", icon: "phone", title: "Screen share trap", sub: "Asked to install an app or share your screen to fix something." },
+const TRICKS: AccItem[] = [
+  { kind: "digital_arrest", icon: "alert-triangle", title: "Digital arrest", sub: "Fake police, CBI or customs, often on a video call, demanding money.", img: "scam-digital", alt: "A phone showing a video call from a faceless uniformed figure, with a red warning ring and a handcuff icon." },
+  { kind: "bank_caller", icon: "bank", title: "Fake bank or card call", sub: "A support agent who needs your OTP, PIN or card number.", img: "scam-phishing", alt: "A hook dangling over a phone chat bubble that holds a link." },
+  { kind: "voice_clone", icon: "person", title: "Cloned voice", sub: "A familiar voice in sudden trouble, asking for money fast.", img: "scam-voice", alt: "A phone with two overlapping sound waves and a microphone, showing a copied voice." },
+  { kind: "remote_help", icon: "phone", title: "Screen share trap", sub: "Asked to install an app or share your screen to fix something.", img: "scam-remote", alt: "A laptop with a red cursor and an eye icon, showing a stranger watching the screen." },
 ];
 
 const STATS: { num: string; label: string }[] = [
@@ -33,6 +36,12 @@ const HOW: { title: string; text: string }[] = [
   { title: "Tell it what is happening", text: "A call, a message, or money already gone. Three big buttons, no sign-up, no app." },
   { title: "It looks for the tricks", text: "Fake links, OTP requests, threats, secrecy and pressure. Checked on your own phone." },
   { title: "Get the next steps", text: "Plain steps in the right order, with the 1930 helpline one tap away." },
+];
+
+const FEATURES: Feature[] = [
+  { title: HOW[0].title, text: HOW[0].text, img: "step-hero", alt: "ScamShield help screen illustration." },
+  { title: HOW[1].title, text: HOW[1].text, img: "step-call", alt: "A person on a phone call being guided step by step." },
+  { title: HOW[2].title, text: HOW[2].text, img: "step-family", alt: "A family looking at a phone together." },
 ];
 
 const FAQ: { q: string; a: string }[] = [
@@ -163,15 +172,7 @@ function Home() {
             <p className="kicker">How it works</p>
             <h2 id="how-h" className="section__title">Three steps, no technical words</h2>
           </div>
-          <ol className="how">
-            {HOW.map((h, i) => (
-              <li key={h.title}>
-                <span className="how__num" aria-hidden="true">{i + 1}</span>
-                <h3>{h.title}</h3>
-                <p>{h.text}</p>
-              </li>
-            ))}
-          </ol>
+          <FeaturePanel items={FEATURES} />
         </div>
       </section>
 
@@ -237,6 +238,25 @@ function Home() {
         </div>
       </section>
 
+      <section className="section" aria-labelledby="tl-h">
+        <div className="wrap wrap--wide">
+          <div className="section-head">
+            <p className="kicker">The script</p>
+            <h2 id="tl-h" className="section__title">How a scam unfolds</h2>
+            <p className="section__lead">Most scams follow the same five steps. Spot the stage you are in and stop before the last one.</p>
+          </div>
+          <ol className="tl">
+            {(STAGES as string[]).map((st, i) => (
+              <li key={st} className="tl__item">
+                <span className="tl__dot" aria-hidden="true">{i + 1}</span>
+                <h3 className="tl__title">{STAGE_INFO[st as keyof typeof STAGE_INFO].label}</h3>
+                <p className="tl__text">{STAGE_INFO[st as keyof typeof STAGE_INFO].meaning}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
       <section className="section" aria-labelledby="tricks-h">
         <div className="wrap wrap--wide">
           <div className="section-head">
@@ -244,23 +264,7 @@ function Home() {
             <h2 id="tricks-h" className="section__title">Tricks scammers use on calls</h2>
             <p className="section__lead">Tap one if it is happening to you right now. Each opens a short guide you can follow while they are on the line.</p>
           </div>
-          <ul className="tiles">
-            {tricks.map((t) => (
-              <li key={t.kind}>
-                <Link to="/call/$kind" params={{ kind: t.kind }} className="tile">
-                  <span className="icon-tile" aria-hidden="true">
-                    <Icon name={t.icon} size={28} />
-                  </span>
-                  <span className="tile__title">{t.title}</span>
-                  <span className="tile__sub">{t.sub}</span>
-                  <span className="tile__go">
-                    Open the guide
-                    <Icon name="chevron-right" size={20} />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <ScamAccordion items={tricks} />
         </div>
       </section>
 
