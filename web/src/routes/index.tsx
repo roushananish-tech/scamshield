@@ -2,8 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Page, MAIN_HEADING_ID } from "../ui/chrome";
 import { FrontDoorCards } from "../ui/parts";
 import { Icon, type IconName } from "../ui/icons";
+import { NewTab } from "../ui/parts";
 import { LiveDemo } from "../ui/demo";
-import { PANIC_KINDS } from "../engine/panic.js";
+import { RedFlags } from "../ui/redflags";
+import { COMM_PORTAL, PORTAL } from "../engine/lostMoney.js";
+import { portalHref } from "../lib/links";
+import { FOUR_RULES, PANIC_KINDS } from "../engine/panic.js";
 import { TEL_1930 } from "../lib/links";
 
 export const Route = createFileRoute("/")({
@@ -102,6 +106,17 @@ function Home() {
         </div>
       </section>
 
+      <section className="help-strip" aria-labelledby="help-h">
+        <div className="wrap wrap--wide help-strip__row">
+          <h2 id="help-h" className="help-strip__title">Official help in India</h2>
+          <ul className="help-strip__list">
+            <li><a href={TEL_1930} aria-label="Call 1930, the national cyber-fraud helpline"><Icon name="phone" size={20} />1930 helpline</a></li>
+            <li><a href={portalHref(PORTAL)} target="_blank" rel="noopener noreferrer"><Icon name="globe" size={20} />{PORTAL}<NewTab /></a></li>
+            <li><a href={portalHref(COMM_PORTAL)} target="_blank" rel="noopener noreferrer"><Icon name="globe" size={20} />{COMM_PORTAL}<NewTab /></a></li>
+          </ul>
+        </div>
+      </section>
+
       <section className="section section--tint" aria-labelledby="proof-h">
         <div className="wrap wrap--wide">
           <div className="section-head">
@@ -157,6 +172,68 @@ function Home() {
               </li>
             ))}
           </ol>
+        </div>
+      </section>
+
+      <section className="section" aria-labelledby="bento-h">
+        <div className="wrap wrap--wide">
+          <div className="section-head">
+            <p className="kicker">Everything in one place</p>
+            <h2 id="bento-h" className="section__title">One calm place for every scam moment</h2>
+          </div>
+          <ul className="bento">
+            <li className="bento__a">
+              <Link to="/check" className="bento__card bento__card--feature">
+                <span className="icon-tile" aria-hidden="true"><Icon name="message" size={28} /></span>
+                <span className="bento__title">Check a message</span>
+                <span className="bento__sub">Paste a text, WhatsApp or email. See the warning signs in plain words, with the suspicious parts picked out.</span>
+                <span className="bento__chips" aria-hidden="true">
+                  <span className="mini-chip mini-chip--danger">Fake link</span>
+                  <span className="mini-chip mini-chip--danger">Asks for OTP</span>
+                  <span className="mini-chip mini-chip--caution">Threat</span>
+                </span>
+              </Link>
+            </li>
+            <li className="bento__b">
+              <Link to="/call" className="bento__card">
+                <span className="icon-tile" aria-hidden="true"><Icon name="phone" size={28} /></span>
+                <span className="bento__title">Call guide</span>
+                <span className="bento__sub">What to say and when to hang up, while they are still on the line.</span>
+              </Link>
+            </li>
+            <li className="bento__c">
+              <Link to="/lost" className="bento__card">
+                <span className="icon-tile" aria-hidden="true"><Icon name="rupee" size={28} /></span>
+                <span className="bento__title">Lost money steps</span>
+                <span className="bento__sub">The right order of calls and reports, starting with 1930.</span>
+              </Link>
+            </li>
+            <li className="bento__d">
+              <Link to="/quiz" className="bento__card">
+                <span className="icon-tile" aria-hidden="true"><Icon name="shield" size={28} /></span>
+                <span className="bento__title">Spot the scam quiz</span>
+                <span className="bento__sub">Six messages. Learn the signs by trying.</span>
+              </Link>
+            </li>
+            <li className="bento__e">
+              <Link to="/share" className="bento__card">
+                <span className="icon-tile" aria-hidden="true"><Icon name="share" size={28} /></span>
+                <span className="bento__title">Send to family</span>
+                <span className="bento__sub">The four rules on WhatsApp, in one tap.</span>
+              </Link>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section className="section section--tint" aria-labelledby="flags-h">
+        <div className="wrap wrap--wide">
+          <div className="section-head">
+            <p className="kicker">Learn the signs</p>
+            <h2 id="flags-h" className="section__title">Four red flags in almost every scam</h2>
+            <p className="section__lead">Pick one to see what scammers say and what is really true.</p>
+          </div>
+          <RedFlags />
         </div>
       </section>
 
@@ -218,6 +295,29 @@ function Home() {
               loading="lazy"
               decoding="async"
             />
+          </div>
+        </div>
+      </section>
+
+      <section className="section section--rules" aria-labelledby="rules-h">
+        <div className="wrap wrap--wide">
+          <div className="section-head">
+            <p className="kicker">Remember these</p>
+            <h2 id="rules-h" className="section__title">Four rules that beat almost every scam</h2>
+          </div>
+          <ol className="rules-rail">
+            {(FOUR_RULES as string[]).map((rule, i) => (
+              <li key={rule}>
+                <span className="rules-rail__num" aria-hidden="true">{i + 1}</span>
+                <p>{rule}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="actions">
+            <Link to="/share" className="btn btn--primary">
+              <Icon name="share" />
+              Send these to family
+            </Link>
           </div>
         </div>
       </section>

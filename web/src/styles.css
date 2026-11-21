@@ -550,3 +550,84 @@ body { background: linear-gradient(180deg, #f6f8fd 0, #ffffff 360px) no-repeat, 
   .choice:hover, .tile:hover, .how li:hover { transform: translateY(-3px); }
   .btn--primary:hover:not(:disabled), .btn--danger:hover:not(:disabled) { transform: translateY(-1px); }
 }
+
+/* ---- Inspired by bento, tabbed-feature and info-strip patterns from the 21st.dev community library ---- */
+.help-strip { background: #ffffff; border-bottom: 1px solid var(--hairline); }
+.help-strip__row { display: grid; gap: 4px; padding-top: 14px; padding-bottom: 14px; align-items: center; }
+.help-strip__title { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.help-strip__list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0 20px; }
+.help-strip__list li { max-width: none; }
+.help-strip__list a { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; font-weight: 700; text-decoration: none; color: var(--action); }
+.help-strip__list a:hover { text-decoration: underline; }
+@media (min-width: 900px) { .help-strip__row { grid-template-columns: auto 1fr; gap: 24px; } .help-strip__list { justify-content: flex-end; } }
+
+.bento { list-style: none; padding: 0; display: grid; gap: 14px; margin-top: 28px; }
+.bento > li { max-width: none; }
+.bento__card {
+  display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 22px; border-radius: var(--radius-lg);
+  background: #ffffff; border: 1.5px solid var(--card-line); box-shadow: var(--shadow-sm); color: var(--ink); text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+.bento__card:hover { border-color: var(--action); box-shadow: var(--shadow-md); }
+.bento__card--feature {
+  background:
+    radial-gradient(420px 260px at 100% 0%, rgba(47, 111, 237, 0.14), transparent 65%),
+    linear-gradient(180deg, #ffffff, #f4f7ff);
+}
+.bento__title { font-size: 22px; line-height: 1.25; font-weight: 700; }
+.bento__sub { font-size: 17px; line-height: 1.5; color: var(--ink-2); }
+.bento__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 6px; }
+.mini-chip { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+.mini-chip--danger { background: var(--danger-tint); color: var(--danger); border: 1px solid #f4b8b1; }
+.mini-chip--caution { background: var(--caution-tint); color: var(--caution-ink); border: 1px solid #f6cf8f; }
+@media (min-width: 700px) {
+  .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bento__a { grid-column: 1 / -1; }
+}
+@media (min-width: 1000px) {
+  .bento { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 18px; }
+  .bento__a { grid-column: span 4; grid-row: span 2; }
+  .bento__b, .bento__c { grid-column: span 2; }
+  .bento__d, .bento__e { grid-column: span 3; }
+  .bento__card--feature { padding: 32px; }
+  .bento__card--feature .bento__title { font-size: 30px; }
+  .bento__card--feature .bento__sub { font-size: 19px; max-width: 44ch; }
+}
+
+.flags { margin-top: 28px; display: grid; gap: 16px; }
+.flags__tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.flags__tab {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 52px; padding: 0 18px; border-radius: 999px;
+  border: 1.5px solid var(--card-line); background: #ffffff; color: var(--ink); font-size: 17px; font-weight: 700; cursor: pointer;
+  transition: background-color var(--ease), border-color var(--ease), color var(--ease);
+}
+.flags__tab:hover { border-color: var(--action); }
+.flags__tab[aria-pressed="true"] { background: var(--action); border-color: var(--action); color: #ffffff; }
+.flags__panel { background: #ffffff; border: 1px solid var(--hairline); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 24px; display: grid; gap: 16px; }
+.flags__panel h3 { font-size: 24px; line-height: 1.25; }
+.flags__says, .flags__truth { max-width: none; border-radius: 16px; padding: 16px; display: grid; gap: 6px; font-size: 18px; }
+.flags__says { background: var(--danger-tint); border-left: 6px solid var(--danger); }
+.flags__truth { background: var(--clear-tint); border-left: 6px solid var(--clear); }
+.flags__label { font-size: 16px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--danger); }
+.flags__label--ok { color: var(--clear); }
+@media (min-width: 900px) { .flags__panel { grid-template-columns: 1fr 1fr; padding: 32px; } .flags__panel h3 { grid-column: 1 / -1; font-size: 28px; } }
+
+/* Giant-numeral rail, inspired by the ranked "Top today" rail on 21st.dev. Real content only. */
+.section--rules { background: linear-gradient(180deg, #ffffff, #f3f6fd); }
+.rules-rail { list-style: none; padding: 0; margin-top: 28px; display: grid; gap: 14px; counter-reset: none; }
+.rules-rail li {
+  position: relative; overflow: hidden; max-width: none; min-height: 150px; padding: 24px 22px 24px 96px;
+  background: #ffffff; border: 1.5px solid var(--card-line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  display: flex; align-items: center;
+}
+.rules-rail__num {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 108px; line-height: 1; font-weight: 700;
+  letter-spacing: -0.06em; color: #e1e8f8; user-select: none;
+}
+.rules-rail p { position: relative; max-width: none; font-size: 19px; font-weight: 700; line-height: 1.4; }
+@media (min-width: 700px) { .rules-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) {
+  .rules-rail { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  .rules-rail li { flex-direction: column; align-items: flex-start; justify-content: flex-end; min-height: 280px; padding: 24px; }
+  .rules-rail__num { left: 12px; top: 6px; transform: none; font-size: 150px; }
+}
