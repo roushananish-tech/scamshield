@@ -4,6 +4,15 @@
 
 Paste an SMS, WhatsApp message or link. ScamShield tells you whether it looks like a scam, **shows exactly which phrases triggered it and why**, and, if you already clicked or paid, tells you what to do next. Everything runs in your browser. Nothing is uploaded.
 
+## Live site
+**https://scamshield-in.higgsfield.app** (the hosted web app, source in `web/`).
+
+Two builds share one rule engine (`src/engine/*.js`, unchanged between them):
+- **Root app** (`index.html`, `src/app.js`): the original zero-dependency, single-page checker. Run it with `npm start`.
+- **Hosted web app** (`web/`): TanStack Start (React 19) site with a home page, live demo, "I am on a call", lost-money steps, message and chat checker, spot-the-scam quiz and four family rules. Same engine, same privacy rule: nothing typed is sent anywhere.
+
+Hosted site security headers: `default-src 'none'`, per-request nonce for scripts and styles, `connect-src 'none'`, `form-action 'none'`, `base-uri 'none'`, no `unsafe-inline`. The `style-src` also holds one fixed hash for a style block the Higgsfield editor injects while the owner edits the site; it is not used by visitors.
+
 ## Why this is different
 | Feature | What it does |
 |---|---|
@@ -65,13 +74,14 @@ Methodology and disclosures:
 `tests/mutation.test.js` applies cheap obfuscation to every scam in the corpus (upper-case, zero-width characters, Cyrillic look-alikes, full-width letters, extra spaces) and requires verdicts not to drop. This found a real bug (runs of spaces broke matching), now fixed by collapsing whitespace in the normaliser.
 
 ## Security
+The points below describe the root app. The hosted site's headers are listed under Live site.
 - Strict CSP (`default-src 'none'; script-src 'self'; connect-src 'none'; form-action 'none'`), no inline script/style, no external resources. Verified by `tests/static.test.js`.
 - No `innerHTML`/`eval`; all rendering via text nodes, so pasted HTML or script is shown as text.
 - Input caps (5,000 chars per message, 200 messages, 2,000 chars each); bounded regexes; pathological-input tests (`tests/perf.test.js`).
 - No cookies, `localStorage` or tracking. Static server serves an allow-list only, with path-traversal guard.
 
 ## Accessibility
-Zero violations in an automated axe-core audit (light and dark, before and after a result). Skip link, labelled controls, `fieldset/legend` radios, live status region, focus moved to results, verdict shown with icon **and** text (not colour only), `<progress>` with label, light/dark and reduced-motion support, visible focus, 44 px targets, optional read-aloud (feature-detected).
+Root app: zero violations in an automated axe-core audit (light and dark, before and after a result). Skip link, labelled controls, `fieldset/legend` radios, live status region, focus moved to results, verdict shown with icon **and** text (not colour only), `<progress>` with label, light/dark and reduced-motion support, visible focus, 44 px targets, optional read-aloud (feature-detected). The hosted web app uses the same principles (skip link, labelled controls, icon plus text verdicts, 44 px targets, reduced-motion support) but has not had the automated axe-core audit run on it.
 
 ## Assumptions & limitations
 - Scores are **risk indicators, not proof**. A "low" verdict is not a safety guarantee.
@@ -83,6 +93,7 @@ Zero violations in an automated axe-core audit (light and dark, before and after
 
 ## Layout
 ```
+web/                      hosted React site (see Live site)
 index.html  styles.css  src/app.js
 src/engine/{normalize,urls,rules,analyze,highlight,playbook,conversation}.js
 eval/{corpus.json,run.js}   tests/*.test.js   scripts/serve.js
