@@ -33,7 +33,15 @@ export function normalize(raw) {
     if (ZERO_WIDTH.test(cp)) continue;
     const lowered = cp.normalize('NFKC').toLowerCase();
     for (const ch of lowered) {
-      const out = CONFUSABLES[ch] ?? ch;
+      let out = CONFUSABLES[ch] ?? ch;
+      if (/[ \t\u00a0\u2000-\u200a\u202f\u3000]/.test(out)) {
+        out = ' ';
+        // Collapse runs of blanks into one space; the kept space spans the run.
+        if (chars.length && chars[chars.length - 1] === ' ') {
+          ends[ends.length - 1] = rawEnd;
+          continue;
+        }
+      }
       // One entry per UTF-16 unit so regex indices on `text` line up.
       for (let k = 0; k < out.length; k++) {
         chars.push(out[k]);

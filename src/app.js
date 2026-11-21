@@ -169,6 +169,12 @@ function run(event) {
 
 function init() {
   $('check-form').addEventListener('submit', run);
+  $('input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      $('check-form').requestSubmit();
+    }
+  });
   $('clear').addEventListener('click', () => {
     $('input').value = '';
     $('results').replaceChildren();
@@ -181,7 +187,7 @@ function init() {
     b.addEventListener('click', () => {
       $('input').value = ex.text;
       document.querySelector(`input[name="mode"][value="${ex.mode}"]`).checked = true;
-      $('input').focus();
+      $('check-form').requestSubmit();
     });
     list.append(el('li', {}, b));
   }

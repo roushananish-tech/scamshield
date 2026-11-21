@@ -18,7 +18,7 @@ test('dev set regression guard', () => {
 });
 
 test('holdout sets stay at honest, acceptable levels', () => {
-  for (const s of ['holdout', 'holdout2']) {
+  for (const s of ['holdout', 'holdout2', 'holdout3', 'holdout4', 'holdout5']) {
     const r = evaluate(bySet(s));
     assert.ok(r.recall >= 0.75, `${s} recall ${r.recall}`);
     assert.ok(r.falsePositiveRate <= 0.15, `${s} fpr ${r.falsePositiveRate}`);

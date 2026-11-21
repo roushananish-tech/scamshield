@@ -10,10 +10,10 @@ Paste an SMS, WhatsApp message or link. ScamShield tells you whether it looks li
 | Privacy by design | No server calls, no storage, no analytics. CSP sets `connect-src 'none'`, so the page *cannot* send your message anywhere. |
 | Explainable | Every verdict lists weighted reasons, with the matching words highlighted in your own message. |
 | Conversation mode | Paste a WhatsApp chat export. Detects scam-script stages (hook → authority → pressure → isolation → extraction) and predicts the next step. Catches "digital arrest" scams that no single message reveals. |
-| India-specific | KYC/bank, UPI collect, parcel/customs fee, electricity cut-off, traffic challan, part-time task/APK, fake investment, digital arrest. Includes Hinglish and Devanagari patterns. |
+| India-specific | 2026 patterns from SEBI and I4C advisories (replacement stock-tip groups, fake trading apps, malicious `.exe` "statement" files, loan-app blackmail, "vote for my friend" WhatsApp takeover, prepaid-task scams, overpayment tricks), plus KYC/bank, UPI collect, parcel/customs fee, electricity cut-off, traffic challan, part-time task/APK, fake investment, digital arrest. Includes Hinglish and Devanagari patterns. |
 | URL forensics, no fetching | Brand look-alikes, shorteners, punycode, `@` tricks, risky TLDs, `.apk`, fake `.gov`. Analysed from text only, so no SSRF and no tracking pixel. |
 | "I already clicked / paid" | Recovery playbooks for clicked, replied, shared OTP, installed an app, or paid. Points to 1930, cybercrime.gov.in and Chakshu (sancharsaathi.gov.in). Never promises money back. |
-| Honest metrics | Eval harness with dev / holdout sets and disclosed failures (below). |
+| Honest metrics | Eval harness with a dev set and five holdout sets, disclosed failures and an obfuscation test suite (below). |
 
 ## How it works
 1. **Normalise** (`src/engine/normalize.js`): NFKC, lower-case, strip zero-width characters, fold Cyrillic/Greek look-alikes, undo leet (`h3llo`) only inside words. Each character keeps a map back to the raw text for highlighting.
@@ -28,23 +28,41 @@ It is a deterministic rule engine, not an ML model, by choice: it is fast, audit
 ## Run
 ```bash
 npm start        # http://127.0.0.1:8080  (zero dependencies, Node >= 20)
-npm test         # 44 tests
+npm test         # 71 tests
 npm run eval     # accuracy table on the labelled corpus
 ```
 
-## Evaluation (read this honestly)
-Corpus: `eval/corpus.json`, **hand-written synthetic** messages (not real scam data), 66 total. Positive = verdict is not "low".
+## Engine modules for recovery and awareness
+Pure, tested modules (no DOM, no network, no storage). `docs/UI_HANDOFF.md` has the API; `docs/CONTENT.md` lists every user-facing string.
 
-| Set | Msgs | Scam recall | Strict recall (verdict = scam) | Precision | False-positive rate |
+| Module | What it provides |
+|---|---|
+| `lostMoney.js` | Ordered action plans for 8 incident types (UPI, card, shared code, remote-access app, investment, digital arrest, loan blackmail, WhatsApp takeover); a copy-ready summary for the 1930 operator or bank; urgency bands. States the RBI 3-working-day reporting rule and never promises a refund or quotes a recovery percentage. |
+| `panic.js` | One-screen "I am on a call right now" cards for digital arrest, voice cloning, fake bank callers and remote-access requests, plus four family rules and a code-word guide. |
+| `quiz.js` | "Spot the scam" rounds graded by the real engine, with hand-written synthetic cards. |
+| `share.js` | WhatsApp share links. Shared text contains rule titles or a score, never the checked message. |
+
+## Evaluation (read this honestly)
+Corpus: `eval/corpus.json`, **hand-written synthetic** messages (not real scam data), 78 total. Positive = verdict is not "low". Strict recall counts only the "scam" verdict.
+
+| Set | Msgs | Scam recall | Strict recall | Precision | False-positive rate |
 |---|---|---|---|---|---|
 | dev (used to tune) | 40 | 100% | 95.8% | 100% | 0% |
-| holdout | 18 | 90% | 80% | 100% | 0% |
-| holdout2 | 8 | 100% | 100% | 100% | 0% |
+| holdout (partly tuned, see below) | 18 | 100% | 90% | 100% | 0% |
+| holdout2 (not tuned) | 8 | 100% | 100% | 100% | 0% |
+| **holdout3 (written last, never tuned)** | 12 | 100% | **66.7%** | 100% | 0% |
+| holdout4 (2026 patterns; rules written after seeing it, so tuned) | 16 | 100% | 75% | 100% | 0% |
+| holdout5 (2026 patterns, new wording; **first run 50% recall / 16.7% strict**, then fixed, so now tuned) | 12 | 100% | 50% | 100% | 0% |
 
 Methodology and disclosures:
-- `holdout` was written before the first run. On its **first run** it scored 90% recall / 80% strict recall / 90% precision / **12.5% false-positive rate**: a genuine bank OTP message was wrongly flagged by an over-broad urgency pattern (`expires in`). I fixed the pattern. Because that set then influenced the rules, it is no longer clean, so `holdout2` was written afterwards and never tuned against.
-- **Known miss:** `H-S06`, a remote-access refund scam ("install AnyDesk"), is not detected. Documented limitation.
-- 8 messages is far too few for a confidence interval. Treat these numbers as *indicative*, not a production accuracy claim.
+- `holdout` was written before the first run. On its **first run** it scored 90% recall / 80% strict recall / 90% precision / **12.5% false-positive rate**. A genuine bank OTP message was wrongly flagged by an over-broad urgency pattern, and one scam (`H-S06`, remote-access refund scam) was missed. I fixed both, so this set is **no longer clean** and its numbers are optimistic.
+- `holdout2` and `holdout3` were written after those fixes and not tuned against. `holdout3` is the most honest number: all 6 scams were flagged, but 2 only reached "suspicious" (scores 48 and 50: a fake "earn by liking videos" offer and a "new number, send money" family scam), not "scam". Left as is on purpose.
+- `holdout4` tests the 2026 scam types. **Before** the new rules were added it caught only 50% of scams (strict 12.5%): the older engine did not know replacement stock-tip groups, `.exe` files, loan-app blackmail, "vote for my friend" or prepaid-task scams. I then wrote the rules *after* seeing those messages, so the 100% recall is not a fair test.
+- `holdout5` was written afterwards with deliberately different wording. **First run: 50% recall, 16.7% strict recall, 0% false alarms.** The new rules were too tied to my own phrasing (for example, they required the word "group", not "community"). I widened four patterns narrowly and re-ran, so its final numbers are also optimistic. **The first-run figure is the honest estimate of how well the new rules generalise.**
+- 12 to 18 messages per set is too few for a confidence interval. Treat all numbers as *indicative*, not a production accuracy claim.
+
+## Robustness testing
+`tests/mutation.test.js` applies cheap obfuscation to every scam in the corpus (upper-case, zero-width characters, Cyrillic look-alikes, full-width letters, extra spaces) and requires verdicts not to drop. This found a real bug (runs of spaces broke matching), now fixed by collapsing whitespace in the normaliser.
 
 ## Security
 - Strict CSP (`default-src 'none'; script-src 'self'; connect-src 'none'; form-action 'none'`), no inline script/style, no external resources. Verified by `tests/static.test.js`.
@@ -53,7 +71,7 @@ Methodology and disclosures:
 - No cookies, `localStorage` or tracking. Static server serves an allow-list only, with path-traversal guard.
 
 ## Accessibility
-Skip link, labelled controls, `fieldset/legend` radios, live status region, focus moved to results, verdict shown with icon **and** text (not colour only), `<progress>` with label, light/dark and reduced-motion support, visible focus, 44 px targets, optional read-aloud (feature-detected).
+Zero violations in an automated axe-core audit (light and dark, before and after a result). Skip link, labelled controls, `fieldset/legend` radios, live status region, focus moved to results, verdict shown with icon **and** text (not colour only), `<progress>` with label, light/dark and reduced-motion support, visible focus, 44 px targets, optional read-aloud (feature-detected).
 
 ## Assumptions & limitations
 - Scores are **risk indicators, not proof**. A "low" verdict is not a safety guarantee.
