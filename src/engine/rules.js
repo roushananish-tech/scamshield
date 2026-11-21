@@ -1,0 +1,142 @@
+// Declarative signal catalogue. Each rule has a confidence weight (0-1) that
+// the signal, on its own, points to fraud. Weights are hand-set judgement
+// calls, not learned parameters: see README "Limitations".
+//
+// Patterns run on NORMALISED text (lower-case, look-alikes folded), so they
+// stay lower-case here. `negation: true` skips matches preceded by "do not",
+// "never" etc. so that genuine "never share your OTP" warnings do not fire.
+
+const R = (id, category, weight, pattern, title, why, extra = {}) =>
+  ({ id, category, weight, re: new RegExp(pattern, 'gi'), title, why, ...extra });
+
+export const RULES = [
+  // ---- Pressure -----------------------------------------------------------
+  R('urgency', 'urgency', 0.25,
+    String.raw`\b(urgent(ly)?|immediate(ly)?|asap|right now|act now|last (chance|warning|reminder)|final (notice|warning|reminder)|expires? (today|soon|tonight)|within \d+\s*(hours?|hrs?|minutes?|mins?)|today only|hurry|limited time)\b`,
+    'Artificial urgency', 'Scammers rush you so you act before thinking. Real organisations rarely demand action within minutes.'),
+  R('threat_loss', 'threat', 0.35,
+    String.raw`\b(will be|has been|is being|shall be)\s+(blocked|suspended|deactivated|disconnected|terminated|frozen|closed|cancelled|blacklisted)\b`,
+    'Threat of losing an account or service', 'Fear of losing access is the most common pressure tactic.'),
+  R('threat_hinglish', 'threat', 0.4,
+    String.raw`(account|khata|sim|card)\s+(band|block)\s+ho\s+(jayega|jaega|jaye)|gir[ae]ftar|arrest\s+ho\b|band\s+kar\s+diya\s+jayega`,
+    'Threat of closure or arrest (Hinglish)', 'Same fear tactic written in romanised Hindi.'),
+  R('threat_devanagari', 'threat', 0.4,
+    String.raw`(खाता|अकाउंट|सिम)\s*(बंद|ब्लॉक)|गिरफ्तार|डिजिटल\s*अरेस्ट`,
+    'Threat of closure or arrest (Hindi)', 'Fear tactic written in Hindi.'),
+  R('urgency_hinglish', 'urgency', 0.25,
+    String.raw`\b(turant|jaldi\s+(karo|bhejo)|abhi\s+karo|aaj\s+hi|24\s+ghante)\b|तुरंत|जल्दी|अभी\s*(करें|कीजिए)`,
+    'Artificial urgency (Hinglish/Hindi)', 'Pressure to act immediately.'),
+
+  // ---- Impersonated authority -------------------------------------------
+  R('digital_arrest', 'authority', 0.65,
+    String.raw`\b(digital(ly)?\s+arrest|arrest\s+warrant|you\s+(are|will\s+be)\s+(under\s+)?arrest(ed)?|money\s+laundering|case\s+(has\s+been\s+)?(registered|filed)\s+against\s+you|(parcel|package)\s+(contains|has|was\s+found)\s+(drugs|illegal|narcotics)|(aadhaar|sim|number)\s+(is|was)\s+(used|linked)\s+(in|to)\s+(illegal|crime|money))`,
+    '"Digital arrest" style threat', 'No agency arrests or interrogates anyone over a call or chat. This script is a known scam.'),
+  R('authority_agency', 'authority', 0.2,
+    String.raw`\b(cbi|ncb|narcotics|enforcement\s+directorate|cyber\s*(cell|crime)|crime\s+branch|customs\s+(department|officer)|income\s+tax\s+(department|dept|officer)|police\s+(case|complaint|station|officer|verification|notice|inspector)|court\s+(order|notice|summons|case|hearing)|trai\s+(notice|notification|alert)|rbi\s+(notice|guidelines?\s+require))\b`,
+    'Claims to be from an agency or authority', 'Scammers pose as police, courts or regulators to scare people into obeying.'),
+  R('isolation', 'isolation', 0.55,
+    String.raw`\b((do\s+not|don['’]?t|dont)\s+(tell|inform|disclose|share\s+this\s+with)\s+(anyone|anybody|your\s+family|family)|keep\s+(this\s+)?(confidential|secret)|(do\s+not|don['’]?t|dont)\s+(disconnect|hang\s*up|end)\s+(the\s+)?(call|video)|stay\s+on\s+(the\s+)?(call|video|line)|(do\s+not|don['’]?t|dont)\s+(contact|talk\s+to)\s+(anyone|your\s+bank|police|a\s+lawyer))\b`,
+    'Tells you to keep it secret or stay on the line', 'Isolating the victim from family and advice is a hallmark of serious scams.'),
+  R('kyc', 'kyc', 0.35,
+    String.raw`\b(re-?kyc|kyc\s+(update|verification|expired|pending|incomplete)|update\s+(your\s+)?(kyc|pan|aadhaar|account\s+details)|verify\s+(your\s+)?(account|identity|kyc|details)|pan\s+(card\s+)?(update|suspended|blocked))\b|केवाईसी`,
+    'KYC / account-verification demand', 'Banks do not ask you to verify KYC through links or messages.'),
+  R('utility', 'utility', 0.5,
+    String.raw`\b((electricity|power|light)\s+(bill|connection)\b[^.\n]{0,60}\b(unpaid|not\s+paid|overdue|disconnect(ed|ion)?|cut|tonight|last\s+month)|(electricity|power|gas|water)\s+(connection\s+|supply\s+)?will\s+be\s+(cut|disconnected|stopped)|disconnection\s+(tonight|today))`,
+    'Utility disconnection threat', 'Fake "electricity bill unpaid, power cut tonight" texts are a widespread scam.'),
+  R('telecom', 'authority', 0.4,
+    String.raw`\b(your\s+)?(sim|mobile\s+number)\s+(will\s+be|is\s+being|has\s+been)\s+(blocked|deactivated|disconnected|suspended)|sim\s+(card\s+)?kyc|5g\s+(sim\s+)?(upgrade|activation)`,
+    'SIM / mobile-number block threat', 'Telecom operators do not threaten disconnection through random links.'),
+  R('traffic', 'authority', 0.35,
+    String.raw`\b(e-?challan|traffic\s+(fine|challan|violation)|fastag\s+(blocked|suspended|expired|kyc)|parivahan)\b`,
+    'Traffic fine / FASTag lure', 'Fake e-challan and FASTag messages push victims to pay through a fraudulent site or app.'),
+
+  // ---- Extraction ----------------------------------------------------------
+  R('credential_ask', 'credential', 0.6,
+    String.raw`\b(share|send|tell|give|provide|forward|read\s*out|enter|submit|confirm|reply\s+with|batao|bhejo)\b[^.\n]{0,30}\b([o0]tp|pin|cvv|password|passcode|card\s*number|upi\s*pin|mpin|aadhaar|pan\s*(number|card)?|net\s*banking)\b`,
+    'Asks for OTP, PIN, password or card details', 'No bank, agency or company will ever ask you to share an OTP, PIN or CVV.', { negation: true }),
+  R('credential_hinglish', 'credential', 0.6,
+    String.raw`\b([o0]tp|pin|cvv)\s+(batao|bhejo|share\s+karo|dijiye|do)\b|(ओटीपी|पिन)\s*(बताओ|भेजो|शेयर|दें|दीजिए|बताएं)`,
+    'Asks for OTP or PIN (Hinglish/Hindi)', 'Handing over an OTP or PIN lets the scammer drain your account.'),
+  R('credential_mention', 'credential', 0.1,
+    String.raw`\b([o0]tp|cvv|upi\s*pin|mpin)\b`,
+    'Mentions an OTP or PIN', 'Mention alone is normal in genuine OTP messages; it only matters with other signals.'),
+  R('payment_fee', 'payment', 0.5,
+    String.raw`\b((processing|registration|clearance|redelivery|re-?delivery|release|customs|insurance|security|activation|verification)\s+(fee|fees|charge|charges|deposit|duty|amount)|refundable\s+(fee|deposit|amount)|pay\s+(a\s+)?(small\s+)?(fee|fine|charge))\b`,
+    'Asks you to pay a small "fee" first', 'Advance fees to release a parcel, prize, loan or refund are a classic scam.'),
+  R('payment_instruction', 'payment', 0.3,
+    String.raw`\b(pay|transfer|send|deposit|remit)\s+(rs\.?|inr|₹|\$)?\s*\d[\d,]*`,
+    'Instructs you to send money', 'Unexpected requests to pay or transfer money deserve suspicion.'),
+  R('upi_collect', 'payment', 0.35,
+    String.raw`\b(collect\s+request|accept\s+(the\s+)?(request|collect|payment\s+request)|scan\s+(the\s+)?qr|enter\s+(your\s+)?upi\s*pin\s+to\s+receive)\b`,
+    'UPI collect / QR trick', 'Receiving money never requires entering your UPI PIN or scanning a QR code.'),
+  R('payment_hinglish', 'payment', 0.35,
+    String.raw`paise\s+(bhejo|transfer\s+karo|send\s+karo)`,
+    'Asks you to send money (Hinglish)', 'Unexpected money request.'),
+  R('apk_file', 'apk', 0.75,
+    String.raw`[\w.-]+\.apk\b|\bapk\s+file\b`,
+    'Pushes an APK file', 'Installing an APK sent by message can give attackers control of your phone and OTPs.'),
+  R('app_install', 'apk', 0.2,
+    String.raw`\b(install|download)\s+(the\s+|this\s+|our\s+)?(app|application)\b`,
+    'Asks you to install an app', 'Only install apps from the official Play Store / App Store listing you found yourself.'),
+  R('callback_number', 'callback', 0.22,
+    String.raw`\b(call|contact|whatsapp|dial|reach)\b[^.\n]{0,40}((\+?91[\s-]?)?[6-9]\d{9}\b)`,
+    'Asks you to call or message a mobile number', 'Scam messages often give a number that connects you to the fraudster, not the real organisation.'),
+
+  // ---- Hooks / lures --------------------------------------------------------
+  R('prize', 'prize', 0.45,
+    String.raw`\b(you\s+(have\s+)?(won|been\s+selected|are\s+selected)|lucky\s+(draw|winner|customer)|lottery|congratulations?\b[^.\n]{0,40}(won|prize|reward|gift)|claim\s+(your\s+)?(prize|reward|gift|cashback|bonus)|reward\s+points?\s+(expire|expiring)|kbc|free\s+(gift|iphone|recharge))\b`,
+    'Prize, lottery or reward lure', 'You cannot win a contest you never entered.'),
+  R('prize_hinglish', 'prize', 0.45,
+    String.raw`\b(inaam|inam|lottery\s+(lagi|jeeti|jeeta)|jeet\s+liya|jeeta\s+hai)\b|इनाम|लॉटरी`,
+    'Prize or lottery lure (Hinglish/Hindi)', 'You cannot win a contest you never entered.'),
+  R('job_task', 'job', 0.5,
+    String.raw`\b(part[\s-]?time\s+(job|work)|work\s+from\s+home|earn\s+(rs\.?|₹)?\s*\d[\d,]*\s*(\/|per|a)?\s*(day|daily|hour|week)|(daily|per\s+day)\s+(income|salary|earning)|like\s+(and\s+)?(subscribe|share)|rate\s+(products|hotels|movies)|complete\s+(simple\s+)?tasks?|task\s+(commission|reward))\b`,
+    'Easy-money job or task offer', 'Pay-per-like and "simple task" jobs are the entry point of task and investment scams.'),
+  R('investment', 'investment', 0.5,
+    String.raw`\b(guaranteed\s+(returns?|profit)|double\s+your\s+(money|investment)|\d+\s*%\s*(daily|weekly)\s*(return|profit)|100\s*%\s*(profit|return|safe)|insider\s+(tip|info)|stock\s+tips?|vip\s+(group|signal)|crypto\s+(giveaway|investment)|trading\s+(signal|group)\s+(on\s+)?(whatsapp|telegram))\b`,
+    'Guaranteed-return investment pitch', 'No legitimate investment guarantees returns.'),
+  R('delivery', 'delivery', 0.3,
+    String.raw`\b((package|parcel|courier|shipment|consignment)\b[^.\n]{0,60}\b(held|stuck|on\s+hold|failed|pending|undelivered|could\s+not\s+be\s+delivered|address\s+(incomplete|not\s+found|invalid)|customs)|delivery\s+(attempt\s+)?(failed|unsuccessful)|update\s+(your\s+)?(delivery\s+)?address|reschedule\s+(your\s+)?delivery)`,
+    'Parcel / delivery problem lure', 'Fake "your parcel is held" messages lead to fee or data-theft pages.'),
+  R('refund_lure', 'refund', 0.4,
+    String.raw`\b(sent\s+(you\s+)?(money\s+)?(by|in)\s+mistake|wrongly\s+(sent|transferred)|please\s+(return|refund|send\s+back)|refund\s+(is\s+)?(pending|approved|initiated)\b[^.\n]{0,50}(click|link|share|otp|details)|excess\s+(amount|payment)\s+(credited|sent))`,
+    'Refund or "sent by mistake" lure', 'Wrong-transfer and refund stories are used to extract money or credentials.'),
+  R('family_emergency', 'family', 0.45,
+    String.raw`\b(hi\s+(mum|mom|mummy|dad|papa|maa)\b[^.\n]{0,60}(new\s+number|lost\s+(my\s+)?phone|dropped\s+my\s+phone)|(accident|hospital|arrested|emergency)\b[^.\n]{0,60}\b(send|transfer|pay)\b[^.\n]{0,20}(money|rs|₹|\d)|i\s+am\s+in\s+(trouble|danger)[^.\n]{0,40}(send|money))`,
+    'Family-emergency money request', '"Hi Mum, new number" and emergency stories impersonate relatives. Call them on their known number.'),
+  R('greeting', 'greeting', 0.12,
+    String.raw`\bdear\s+(customer|user|sir|madam|valued\s+customer|account\s+holder)\b`,
+    'Generic greeting', 'Real banks usually address you by name.'),
+];
+
+/** Category -> pipeline stage for conversation mode. */
+export const STAGE_OF = {
+  prize: 'hook', job: 'hook', investment: 'hook', delivery: 'hook', refund: 'hook', family: 'hook', greeting: 'hook',
+  authority: 'authority', kyc: 'authority', utility: 'authority',
+  urgency: 'pressure', threat: 'pressure',
+  isolation: 'isolation',
+  credential: 'extraction', payment: 'extraction', apk: 'extraction', callback: 'extraction', link_apk: 'extraction',
+};
+
+/** Advice shown per category (short, imperative). */
+export const ADVICE = {
+  credential: 'Never share an OTP, PIN, CVV or password with anyone, however official they sound.',
+  payment: 'Do not pay any "fee", fine or deposit to receive a prize, parcel, refund or loan.',
+  authority: 'Police, courts and agencies do not arrest or investigate people over calls or chats. Hang up and verify through the official number you look up yourself.',
+  isolation: 'Anyone telling you to keep a matter secret is manipulating you. Tell a family member or friend now.',
+  apk: 'Do not install apps sent in messages. Use only the official Play Store or App Store listing.',
+  prize: 'You cannot win a contest you did not enter. Ignore the message.',
+  job: 'Real employers do not pay per like or task, and never ask you to deposit money first.',
+  investment: 'No investment is guaranteed. Do not join "VIP" groups or transfer money to personal accounts.',
+  delivery: 'Track parcels only in the courier or shop app you already use.',
+  kyc: 'Do KYC only in your bank\'s own app or branch, never through a link in a message.',
+  utility: 'Check bills in your electricity provider\'s official app. Real disconnections are not announced by random texts.',
+  refund: 'If money arrives by mistake, ask your bank to reverse it. Do not send it back yourself.',
+  family: 'Call the relative on their saved number before sending anything.',
+  link_impersonation: 'Do not open the link. Type the organisation\'s address yourself or use its official app.',
+  link_obfuscation: 'Do not open links whose destination is hidden or disguised.',
+  link_apk: 'Do not download or install the file.',
+  callback: 'Do not call numbers given in suspicious messages. Use the number printed on your card or official website.',
+  urgency: 'Slow down. Pressure to act fast is the scammer\'s main tool.',
+  threat: 'Threats of blocking or arrest are designed to scare you. Contact the organisation through its official app.',
+};

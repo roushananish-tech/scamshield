@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <meta name="description" content="ScamShield checks suspicious SMS and WhatsApp messages in your browser, explains why, and tells you what to do. Nothing is uploaded.">
+  <title>ScamShield: check a suspicious message</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="src/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#input">Skip to the message box</a>
+
+  <header class="site-header">
+    <h1>ScamShield</h1>
+    <p class="tagline">Paste a suspicious SMS, WhatsApp message or link. Find out why it looks risky and what to do next.</p>
+  </header>
+
+  <main id="main">
+    <p class="privacy" role="note"><strong>Private by design.</strong> Everything is checked inside this page. Your message is never uploaded, stored or sent anywhere, and links are never opened.</p>
+
+    <form id="check-form" novalidate>
+      <fieldset class="modes">
+        <legend>What are you checking?</legend>
+        <label class="choice"><input type="radio" name="mode" value="single" checked> One message or link</label>
+        <label class="choice"><input type="radio" name="mode" value="thread"> A whole conversation</label>
+      </fieldset>
+
+      <div class="field">
+        <label for="input">Paste the message</label>
+        <p id="input-hint" class="hint">For a conversation, paste the chat (WhatsApp "Export chat" text works). Maximum 20,000 characters.</p>
+        <textarea id="input" name="input" rows="8" maxlength="20000" aria-describedby="input-hint" autocomplete="off" spellcheck="false"></textarea>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="sender">Do you know who sent it?</label>
+          <select id="sender" name="sender">
+            <option value="unsure">Not sure</option>
+            <option value="unknown">No, unknown sender</option>
+            <option value="known">Yes, it appears to be someone I know</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="acted">Have you already done anything?</label>
+          <select id="acted" name="acted">
+            <option value="none">No, I only received it</option>
+            <option value="clicked">I opened the link</option>
+            <option value="replied">I replied to them</option>
+            <option value="shared">I shared an OTP, PIN or password</option>
+            <option value="installed">I installed an app they sent</option>
+            <option value="paid">I sent money</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary">Check it</button>
+        <button type="button" id="clear">Clear</button>
+      </div>
+    </form>
+
+    <section aria-labelledby="examples-h" class="examples">
+      <h2 id="examples-h">Not sure? Try an example</h2>
+      <ul id="example-list" class="inline-list"></ul>
+    </section>
+
+    <p id="status" class="sr-only" role="status" aria-live="polite"></p>
+    <section id="results" tabindex="-1" aria-label="Result" hidden></section>
+  </main>
+
+  <footer class="site-footer">
+    <p>ScamShield uses transparent rules, not a black-box model. It can miss scams and can flag genuine messages. A low score does not prove a message is safe. If anything asks for money, codes or a login, check through the official app first.</p>
+    <p>Report suspected fraud messages at sancharsaathi.gov.in. If you have lost money, call <strong>1930</strong> or visit cybercrime.gov.in.</p>
+  </footer>
+</body>
+</html>
