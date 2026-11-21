@@ -5,7 +5,9 @@ import { Icon, type IconName } from "./icons";
 export function ChoiceInner({ icon, title, sub }: { icon: IconName; title: string; sub?: string }) {
   return (
     <>
-      <Icon name={icon} size={32} />
+      <span className="icon-tile" aria-hidden="true">
+        <Icon name={icon} size={28} />
+      </span>
       <span className="choice__text">
         <span className="choice__title">{title}</span>
         {sub ? <span className="choice__sub">{sub}</span> : null}
@@ -73,12 +75,7 @@ export function NewTab() {
 }
 
 /** External link that opens in a new tab and says so to screen readers. */
-export function ExternalButton({
-  href,
-  variant,
-  icon,
-  children,
-}: {
+export function ExternalButton({ href, variant, icon, children }: {
   href: string;
   variant: "primary" | "secondary" | "danger";
   icon?: IconName;
@@ -93,10 +90,7 @@ export function ExternalButton({
   );
 }
 
-/**
- * Clipboard copy with a manual fallback: if the browser refuses, select the
- * text so the person can press and hold to copy it.
- */
+/** Clipboard copy with a manual fallback: if the browser refuses, select the text. */
 export function useCopy() {
   const [state, setState] = useState<"idle" | "ok" | "fail">("idle");
   const copy = useCallback(async (text: string, fallbackEl: HTMLElement | null) => {
