@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Icon, ShieldMark } from "./icons";
 import { NewTab } from "./parts";
+import { Assistant } from "./assistant";
 import { TEL_1930, portalHref } from "../lib/links";
 import { PORTAL, COMM_PORTAL } from "../engine/lostMoney.js";
 
@@ -52,6 +53,7 @@ export function Page({ children, back, showCallLink = true, wide = false }: {
         {children}
       </main>
       <Footer />
+      {showCallLink ? <Assistant /> : null}
     </>
   );
 }
